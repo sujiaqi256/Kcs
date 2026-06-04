@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#4DD0E1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="校园助手" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+    <meta name="description" content="肇庆学院校园助手 - 课表查询、空教室、校园广场、拼车出行、二手集市" />
+    <title>校园助手</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+  </head>
+  <body>
+    <div id="root">
+      <div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#0d1117;color:#888;font-family:sans-serif;flex-direction:column;gap:12px">
+        <div style="font-size:40px">🦊</div>
+        <div>加载中...</div>
+        <div id="err" style="color:#FF6B6B;font-size:12px;max-width:300px;text-align:center"></div>
+      </div>
+    </div>
+    <script>
+    window.onerror=function(m,s,l,c,e){document.getElementById("err").textContent="Error: "+m+" (line "+l+")"};
+    window.addEventListener("unhandledrejection",function(e){document.getElementById("err").textContent="Promise error: "+(e.reason&&e.reason.message||e.reason||"unknown")});
+    </script>
+    <noscript><div style="text-align:center;padding:40px;color:#fff;background:#0d1117">请启用 JavaScript</div></noscript>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

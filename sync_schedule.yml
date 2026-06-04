@@ -1,0 +1,43 @@
+# .github/workflows/sync_schedule.yml
+# 放到你的 GitHub 仓库里，每天自动同步课表
+# 同步结果会存到仓库的 output/ 目录（相当于免费数据库）
+
+name: 每日同步课表
+
+on:
+  schedule:
+    # 每天 UTC 18:00 = 北京时间 02:00
+    - cron: "0 18 * * *"
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 安装依赖
+        run: pip install requests ddddocr pillow
+
+      - name: 运行同步
+        env:
+          # 在 GitHub 仓库 Settings → Secrets 里添加这三个变量
+          JWXT_URL:      ${{ secrets.JWXT_URL }}
+          JWXT_USER:     ${{ secrets.JWXT_USER }}
+          JWXT_PASSWORD: ${{ secrets.JWXT_PASSWORD }}
+        run: python sync.py --once   # 只运行一次，不进入循环
+
+      - name: 提交同步结果
+        run: |
+          git config user.name  "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add output/
+          git diff --staged --quiet || git commit -m "自动同步: $(date '+%Y-%m-%d %H:%M')"
+          git push
