@@ -74,10 +74,13 @@ def do_login(student_id, password):
     except Exception:
         pass
     captcha_text = ""
+    ocr = None
     try:
         import ddddocr
-        resp = session.get(f"{BASE_URL}/verifycode.servlet", timeout=5)
         ocr = ddddocr.DdddOcr(show_ad=False)
+        # 加时间戳防止缓存旧验证码图片
+        ts = int(time.time() * 1000)
+        resp = session.get(f"{BASE_URL}/verifycode.servlet?t={ts}", timeout=5)
         captcha_text = ocr.classification(resp.content).strip()
     except Exception:
         pass
@@ -89,9 +92,9 @@ def do_login(student_id, password):
             return session
         if "验证码" in resp.text:
             try:
-                resp2 = session.get(f"{BASE_URL}/verifycode.servlet", timeout=5)
-                ocr = ddddocr.DdddOcr(show_ad=False)
-                captcha_text = ocr.classification(resp2.content).strip()
+                ts = int(time.time() * 1000)
+                resp2 = session.get(f"{BASE_URL}/verifycode.servlet?t={ts}", timeout=5)
+                captcha_text = ocr.classification(resp2.content).strip() if ocr else ""
             except Exception:
                 return None
             data["RANDOMCODE"] = captcha_text
