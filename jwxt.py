@@ -214,6 +214,12 @@ class JWXT:
 
         # 第二步：获取验证码
         captcha_text = self._get_captcha()
+        if not captcha_text:
+            print("   ❌ 验证码识别为空，重试...")
+            if retry < max_retry:
+                time.sleep(1)
+                return self.login(retry + 1, max_retry)
+            return False
 
         # 第三步：构造encoded字段（base64学号 + %%% + base64密码）
         encoded = (
@@ -242,18 +248,18 @@ class JWXT:
             self._save_cookies()
 
             return True
-        
+
         elif "验证码" in resp.text:
 
             print("   ❌ 验证码错误")
 
-            if retry >= 5:
+            if retry >= max_retry:
                 print("   ❌ 重试次数过多，停止登录")
                 return False
 
-            print(f"   🔄 正在重试 ({retry + 1}/5)...")
-
-            return self.login(retry + 1)
+            print(f"   🔄 正在重试 ({retry + 1}/{max_retry})...")
+            time.sleep(1)  # 等待1秒让服务器生成新验证码
+            return self.login(retry + 1, max_retry)
         else:
             print("   ❌ 登录失败，请检查账号密码")
             print(f"   当前URL: {resp.url}")
@@ -262,13 +268,21 @@ class JWXT:
     def _get_captcha(self):
         try:
             import ddddocr
+            # 加时间戳防止缓存旧验证码图片
+            ts = int(time.time() * 1000)
             resp = self.session.get(
-                f"{BASE_URL}/verifycode.servlet", timeout=5
+                f"{BASE_URL}/verifycode.servlet?t={ts}", timeout=5
             )
             with open(f"{DATA_DIR}/captcha.jpg", "wb") as f:
                 f.write(resp.content)
-            ocr = ddddocr.DdddOcr(show_ad=False)
-            result = ocr.classification(resp.content).strip()
+
+            # 复用 OCR 实例，避免重复初始化
+            if not hasattr(self, '_ocr'):
+                self._ocr = ddddocr.DdddOcr(show_ad=False)
+
+            result = self._ocr.classification(resp.content).strip()
+            # 只保留字母和数字，过滤特殊字符
+            result = re.sub(r'[^a-zA-Z0-9]', '', result)
             print(f"   🔑 验证码: {result}")
             return result
         except ImportError:
